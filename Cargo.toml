@@ -8,3 +8,11 @@ categories = ["gui"]
 
 [dependencies]
 iced = { version = "0.14", features = ["advanced"] }
+
+[target.'cfg(windows)'.dependencies]
+windows-sys = { version = "0.52", features = [
+    "Win32_Foundation",
+    "Win32_System_Threading",
+    "Win32_UI_Input_KeyboardAndMouse",
+    "Win32_UI_WindowsAndMessaging",
+] }

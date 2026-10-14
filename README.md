@@ -4,14 +4,14 @@ Invisible edge & corner resize handles for borderless [iced](https://iced.rs) wi
 
 Setting `decorations: false` in iced removes the OS window frame — including its native resize borders, which makes frameless windows impossible to resize with the mouse. This crate restores them with a single lightweight overlay widget.
 
-Pressing a handle hands the drag to the operating system's own resize machinery via `iced::window::drag_resize`, so resizing looks, feels, and behaves natively:
+Pressing a handle hands the drag to the operating system's own resize machinery via `drag_resize`, so resizing looks, feels, and behaves natively:
 
-| Platform | Mechanism |
-| --- | --- |
-| Windows | Native size loop (`WM_NCLBUTTONDOWN` + `HT*` hit-test codes). No `WM_NCHITTEST`/`WS_THICKFRAME` hacks, so window snapping is untouched. |
-| Linux (X11) | `_NET_WM_MOVERESIZE` — the window manager drives the resize. |
-| Linux (Wayland) | `xdg_toplevel.resize` — the compositor drives the resize. |
-| macOS | Inert. winit borderless windows already keep `NSWindowStyleMask::Resizable`, so macOS edge-resizes them natively. |
+| Platform        | Mechanism                                                                                                                                                                                                                                            |
+|-----------------|------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| Windows         | Native size loop (`WM_NCLBUTTONDOWN` + `HT*` hit-test codes). No `WM_NCHITTEST`/`WS_THICKFRAME` hacks, so window snapping is untouched. The resize cursor is also kept visible for the whole drag (a Windows modal-loop quirk — see the crate docs). |
+| Linux (X11)     | `_NET_WM_MOVERESIZE` — the window manager drives the resize.                                                                                                                                                                                         |
+| Linux (Wayland) | `xdg_toplevel.resize` — the compositor drives the resize.                                                                                                                                                                                            |
+| macOS           | Inert. winit borderless windows already keep `NSWindowStyleMask::Resizable`, so macOS edge-resizes them natively.                                                                                                                                    |
 
 The widget draws nothing and keeps no state — it only watches the borders of its layout bounds, shows the native resize cursors on hover, and captures clicks within its zones.
 
@@ -25,12 +25,12 @@ iced_borderless_window_resize_handle_widget = "0.1"
 
 ## Usage
 
-Layer the handles on top of your UI in a `stack` and forward the message to `iced::window::drag_resize`:
+Layer the handles on top of your UI in a `stack` and forward the message to this crate's `drag_resize` (a drop-in replacement for `iced::window::drag_resize` that also keeps the native resize cursor visible during the whole drag on Windows):
 
 ```rust,ignore
 use iced::widget::stack;
 use iced::window;
-use iced_borderless_window_resize_handle_widget::ResizeHandles;
+use iced_borderless_window_resize_handle_widget::{drag_resize, ResizeHandles};
 
 #[derive(Debug, Clone)]
 enum Message {
@@ -56,7 +56,7 @@ fn update(app: &mut App, message: Message) -> iced::Task<Message> {
         }
         Message::Resized(direction) => app
             .window_id
-            .map(|id| window::drag_resize(id, direction))
+            .map(|id| drag_resize(id, direction))
             .unwrap_or_else(iced::Task::none),
     }
 }

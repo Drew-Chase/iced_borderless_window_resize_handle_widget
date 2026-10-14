@@ -32,7 +32,7 @@
 //! use iced::application;
 //! use iced::widget::{stack, text};
 //! use iced::window;
-//! use iced_borderless_window_resize_handle_widget::ResizeHandles;
+//! use iced_borderless_window_resize_handle_widget::{drag_resize, ResizeHandles};
 //!
 //! fn main() -> iced::Result {
 //!     application(Example::boot, update, view)
@@ -69,7 +69,10 @@
 //!         }
 //!         Message::Resized(direction) => example
 //!             .window_id
-//!             .map(|id| window::drag_resize(id, direction))
+//!             // `drag_resize` is a drop-in replacement for
+//!             // `iced::window::drag_resize` that also keeps the native resize
+//!             // cursor visible during the whole drag on Windows.
+//!             .map(|id| drag_resize(id, direction))
 //!             .unwrap_or_else(iced::Task::none),
 //!     }
 //! }
@@ -113,8 +116,10 @@
 
 #![warn(missing_docs)]
 
+mod platform;
 mod resize_handles;
 
+pub use platform::drag_resize;
 pub use resize_handles::ResizeHandles;
 
 use iced::advanced::renderer;

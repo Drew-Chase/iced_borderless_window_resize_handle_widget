@@ -11,7 +11,7 @@ use iced::widget::{column, container, mouse_area, row, stack, text};
 use iced::window;
 use iced::window::settings::platform::CornerPreference;
 use iced::{Color, Element, Length, Size, Subscription, Task};
-use iced_borderless_window_resize_handle_widget::ResizeHandles;
+use iced_borderless_window_resize_handle_widget::{drag_resize, ResizeHandles};
 
 const TITLEBAR_BACKGROUND: Color = Color::from_rgb8(0x1f, 0x25, 0x2b);
 const BODY_BACKGROUND: Color = Color::from_rgb8(0xf2, 0xf0, 0xeb);
@@ -91,7 +91,9 @@ fn update(basic: &mut Basic, message: Message) -> Task<Message> {
             .unwrap_or_else(Task::none),
         Message::Resize(direction) => basic
             .window_id
-            .map(|id| window::drag_resize(id, direction))
+            // `drag_resize` from this crate keeps the native resize cursor
+            // visible during the whole drag (a Windows modal-loop quirk).
+            .map(|id| drag_resize(id, direction))
             .unwrap_or_else(Task::none),
     }
 }
