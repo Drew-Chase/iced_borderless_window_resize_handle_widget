@@ -1,6 +1,6 @@
 [package]
 name = "iced_borderless_window_resize_handle_widget"
-version = "0.1.0"
+version = "0.1.1"
 edition = "2024"
 description = "A lightweight iced overlay widget that restores edge and corner resizing for borderless windows using native OS resize calls."
 keywords = ["gui", "iced", "widget", "window", "borderless"]
