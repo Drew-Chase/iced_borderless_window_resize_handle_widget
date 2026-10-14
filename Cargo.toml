@@ -5,6 +5,10 @@ edition = "2024"
 description = "A lightweight iced overlay widget that restores edge and corner resizing for borderless windows using native OS resize calls."
 keywords = ["gui", "iced", "widget", "window", "borderless"]
 categories = ["gui"]
+license = "MIT"
+authors = ["Drew Chase"]
+readme = "README.md"
+
 
 [dependencies]
 # `default-features = false` keeps consumers in control of the renderer and
