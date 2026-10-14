@@ -19,9 +19,11 @@ The widget draws nothing and keeps no state — it only watches the borders of i
 
 ```toml
 [dependencies]
-iced = "0.14"
+iced = "0.14"  # any feature set works — the widget is renderer-agnostic
 iced_borderless_window_resize_handle_widget = "0.1"
 ```
+
+The widget only needs iced's `advanced` feature (which many apps already enable) and forces no renderer or executor choices on you. Your app's binary keeps exactly the feature footprint you configured.
 
 ## Usage
 

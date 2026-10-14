@@ -7,7 +7,27 @@ keywords = ["gui", "iced", "widget", "window", "borderless"]
 categories = ["gui"]
 
 [dependencies]
-iced = { version = "0.14", default-features = false, features = ["advanced"] }
+# `default-features = false` keeps consumers in control of the renderer and
+# executor features: the widget is renderer-agnostic and only needs the
+# `advanced` module gating.
+#
+# `thread-pool` is still required because the `iced` meta-crate refuses to
+# compile without an executor feature. It is the lowest-priority executor
+# (tokio and smol always win the `executor::Default` selection) and adds no
+# new dependencies — only the `futures-executor` component of the `futures`
+# crate, which iced already depends on. Consumers that already enable any
+# executor feature pay literally nothing for it.
+iced = { version = "0.14", default-features = false, features = [
+    "advanced",
+    "thread-pool",
+] }
+
+[dev-dependencies]
+iced = { version = "0.14", default-features = false, features = [
+    "advanced",
+    "thread-pool",
+    "tiny-skia",
+] }
 
 [target.'cfg(windows)'.dependencies]
 windows-sys = { version = "0.52", features = [
