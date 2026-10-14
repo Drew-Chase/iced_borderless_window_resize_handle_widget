@@ -9,8 +9,8 @@ use iced::alignment::Vertical;
 use iced::mouse;
 use iced::widget::{column, container, mouse_area, row, stack, text};
 use iced::window;
+use iced::window::settings::platform::CornerPreference;
 use iced::{Color, Element, Length, Size, Subscription, Task};
-
 use iced_borderless_window_resize_handle_widget::ResizeHandles;
 
 const TITLEBAR_BACKGROUND: Color = Color::from_rgb8(0x1f, 0x25, 0x2b);
@@ -28,6 +28,12 @@ fn main() -> iced::Result {
             // Frameless: the OS frame — and its native resize borders — is
             // gone, which is exactly what `ResizeHandles` restores.
             decorations: false,
+            #[cfg(windows)]
+            platform_specific: window::settings::PlatformSpecific {
+                corner_preference: CornerPreference::Default,
+                undecorated_shadow: true,
+                ..window::settings::PlatformSpecific::default()
+            },
             ..window::Settings::default()
         })
         .subscription(subscription)
@@ -62,8 +68,7 @@ impl Basic {
 fn subscription(_basic: &Basic) -> Subscription<Message> {
     Subscription::batch([
         window::open_events().map(|id| Message::WindowOpened(Some(id))),
-        window::resize_events()
-            .map(|(_id, size)| Message::WindowResized(size)),
+        window::resize_events().map(|(_id, size)| Message::WindowResized(size)),
     ])
 }
 
@@ -79,10 +84,7 @@ fn update(basic: &mut Basic, message: Message) -> Task<Message> {
             basic.window_size = size;
             Task::none()
         }
-        Message::StartDrag => basic
-            .window_id
-            .map(window::drag)
-            .unwrap_or_else(Task::none),
+        Message::StartDrag => basic.window_id.map(window::drag).unwrap_or_else(Task::none),
         Message::ToggleMaximize => basic
             .window_id
             .map(window::toggle_maximize)
@@ -109,9 +111,7 @@ fn titlebar() -> Element<'static, Message> {
     mouse_area(
         container(
             row![
-                text("Borderless Window")
-                    .size(15)
-                    .color(LIGHT_TEXT),
+                text("Borderless Window").size(15).color(LIGHT_TEXT),
                 text("drag to move · double-click to maximize")
                     .size(12)
                     .color(DIM_TEXT),
@@ -161,7 +161,7 @@ fn body(basic: &Basic) -> Element<'_, Message> {
     .width(Length::Fill)
     .height(Length::Fill)
     .padding(24)
-    .style(|_| container::Style::default().background(BODY_BACKGROUND))
+    .style(|_| container::Style::default().background(BODY_BACKGROUND).color(DIM_TEXT))
     .into()
 }
 
