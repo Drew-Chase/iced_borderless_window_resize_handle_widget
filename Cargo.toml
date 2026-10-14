@@ -7,7 +7,7 @@ keywords = ["gui", "iced", "widget", "window", "borderless"]
 categories = ["gui"]
 
 [dependencies]
-iced = { version = "0.14", features = ["advanced"] }
+iced = { version = "0.14", default-features = false, features = ["advanced"] }
 
 [target.'cfg(windows)'.dependencies]
 windows-sys = { version = "0.52", features = [
