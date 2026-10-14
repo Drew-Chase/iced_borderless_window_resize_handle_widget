@@ -100,6 +100,32 @@ ResizeHandles::new(Message::Resized)
     .enabled(true) // e.g. `.enabled(!is_maximized)` to disable while maximized
 ```
 
+## Maximized windows
+
+Resize handles make no sense while the window is maximized. Maximize/restore always resizes the window, so `window::resize_events` is the perfect trigger to re-query `window::is_maximized` and feed it to `.enabled(...)`:
+
+```rust,ignore
+// state: maximized: bool
+
+// subscription:
+window::resize_events().map(|(id, _)| Message::WindowResized(id)),
+
+// update:
+Message::WindowOpened(id) => id
+    .map(|id| window::is_maximized(id).map(Message::Maximized))
+    .unwrap_or_else(iced::Task::none),
+Message::WindowResized(id) => window::is_maximized(id).map(Message::Maximized),
+Message::Maximized(maximized) => {
+    app.maximized = maximized;
+    iced::Task::none()
+}
+
+// view:
+ResizeHandles::new(Message::Resized).enabled(!app.maximized)
+```
+
+A disabled set of handles draws nothing, shows no cursor, and captures no clicks — content underneath behaves exactly as if the handles were not there.
+
 ## Notes
 
 * The grab zones consume clicks in the outermost `gutter` pixels of the window — just like the invisible border of a native frame. Don't put interactive widgets flush against the window edges.

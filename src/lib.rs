@@ -107,12 +107,59 @@
 //! * The grab zones consume clicks in the outermost [`ResizeHandles::gutter`]
 //!   pixels of the window — just like the invisible border of a native window
 //!   frame. Avoid placing interactive widgets flush against the window edges.
-//! * Resizing a maximized window is ignored by the OS. If you prefer to hide
-//!   the handles while maximized, subscribe to the window state and use
-//!   [`ResizeHandles::enabled`] (see [`iced::window::is_maximized`]).
 //! * In multi-window applications, capture the [`iced::window::Id`] of each
 //!   window (e.g. with [`iced::window::latest`] or
 //!   [`iced::window::open_events`]) and pass it into the message closure.
+//!
+//! # Maximized windows
+//!
+//! Resize handles make no sense while the window is maximized: the OS refuses
+//! to resize it and an edge cursor would be misleading. The handles cannot
+//! query the maximized state themselves (widgets have no window access), so
+//! track it in your app — maximize and restore always resize the window,
+//! which makes [`iced::window::resize_events`] the perfect trigger for
+//! [`iced::window::is_maximized`]:
+//!
+//! ```ignore
+//! #[derive(Default)]
+//! struct State {
+//!     window_id: Option<window::Id>,
+//!     maximized: bool,
+//! }
+//!
+//! fn update(state: &mut State, message: Message) -> iced::Task<Message> {
+//!     match message {
+//!         Message::WindowOpened(id) => {
+//!             state.window_id = id;
+//!             id.map(|id| window::is_maximized(id).map(Message::Maximized))
+//!                 .unwrap_or_else(iced::Task::none)
+//!         }
+//!         Message::WindowResized(id, size) if state.window_id == Some(id) => {
+//!             window::is_maximized(id).map(Message::Maximized)
+//!             // (also store `size` here)
+//!         }
+//!         Message::Maximized(maximized) => {
+//!             state.maximized = maximized;
+//!             iced::Task::none()
+//!         }
+//!         // ...
+//!     }
+//! }
+//!
+//! fn view(state: &State) -> iced::Element<'_, Message> {
+//!     stack![
+//!         my_ui(state),
+//!         ResizeHandles::new(Message::Resized).enabled(!state.maximized),
+//!     ]
+//!     .width(iced::Fill)
+//!     .height(iced::Fill)
+//!     .into()
+//! }
+//! ```
+//!
+//! A disabled set of handles draws nothing, shows no cursor and captures no
+//! clicks — content underneath behaves exactly as if the handles were not
+//! there.
 
 #![warn(missing_docs)]
 

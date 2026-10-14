@@ -80,12 +80,12 @@ impl<'a, Message> ResizeHandles<'a, Message> {
     /// Sets whether the handles are active.
     ///
     /// When disabled, the widget neither shows resize cursors nor captures
-    /// clicks. Useful to turn the handles off while the window is maximized:
+    /// clicks — content underneath behaves exactly as if the handles were
+    /// not there.
     ///
-    /// ```ignore
-    /// ResizeHandles::new(Message::Resize)
-    ///     .enabled(!state.is_maximized)
-    /// ```
+    /// Typical use: turn the handles off while the window is maximized. See
+    /// the crate-level documentation for the full tracking pattern (widgets
+    /// cannot query the maximized state themselves, so the app feeds it in).
     pub fn enabled(mut self, enabled: bool) -> Self {
         self.enabled = enabled;
         self

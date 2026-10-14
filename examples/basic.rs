@@ -43,7 +43,8 @@ fn main() -> iced::Result {
 #[derive(Debug, Clone)]
 enum Message {
     WindowOpened(Option<window::Id>),
-    WindowResized(Size),
+    WindowResized(window::Id, Size),
+    Maximized(bool),
     StartDrag,
     ToggleMaximize,
     Resize(window::Direction),
@@ -53,6 +54,7 @@ enum Message {
 struct Basic {
     window_id: Option<window::Id>,
     window_size: Size,
+    maximized: bool,
 }
 
 impl Basic {
@@ -68,7 +70,7 @@ impl Basic {
 fn subscription(_basic: &Basic) -> Subscription<Message> {
     Subscription::batch([
         window::open_events().map(|id| Message::WindowOpened(Some(id))),
-        window::resize_events().map(|(_id, size)| Message::WindowResized(size)),
+        window::resize_events().map(|(id, size)| Message::WindowResized(id, size)),
     ])
 }
 
@@ -78,10 +80,23 @@ fn update(basic: &mut Basic, message: Message) -> Task<Message> {
             if id.is_some() {
                 basic.window_id = id;
             }
-            Task::none()
+            // Track the initial maximized state (the window may boot
+            // maximized).
+            id.map(|id| window::is_maximized(id).map(Message::Maximized))
+                .unwrap_or_else(Task::none)
         }
-        Message::WindowResized(size) => {
-            basic.window_size = size;
+        Message::WindowResized(id, size) => {
+            if Some(id) == basic.window_id {
+                basic.window_size = size;
+                // Maximize and restore always resize the window, so this is
+                // the moment to re-check the maximized state.
+                window::is_maximized(id).map(Message::Maximized)
+            } else {
+                Task::none()
+            }
+        }
+        Message::Maximized(maximized) => {
+            basic.maximized = maximized;
             Task::none()
         }
         Message::StartDrag => basic.window_id.map(window::drag).unwrap_or_else(Task::none),
@@ -103,7 +118,7 @@ fn view(basic: &Basic) -> Element<'_, Message> {
         .width(Length::Fill)
         .height(Length::Fill);
 
-    stack![content, ResizeHandles::new(Message::Resize)]
+    stack![content, ResizeHandles::new(Message::Resize).enabled(!basic.maximized)]
         .width(Length::Fill)
         .height(Length::Fill)
         .into()
@@ -152,6 +167,7 @@ fn body(basic: &Basic) -> Element<'_, Message> {
                 bullet("Press and drag: the OS itself runs the native resize loop."),
                 bullet("Corners have a larger grab area than edges."),
                 bullet("The outermost few pixels of the window belong to the handles, like a native frame."),
+                bullet("Maximize the window (double-click the title bar or Win+Up) — the handles get out of the way."),
             ]
             .spacing(8),
             row![text("Live size:").color(DIM_TEXT), text(live_size)]
